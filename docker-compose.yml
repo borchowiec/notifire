@@ -1,0 +1,27 @@
+version: "3.8"
+
+services:
+  eureka-naming-server:
+    image: borchowiecpatryk/eureka-naming-server:0.0.1-SNAPSHOT
+    container_name: eureka-naming-server
+    ports:
+      - "8761:8761"
+    restart: always
+    networks:
+      - notifire-network
+
+  gateway-server:
+    image: borchowiecpatryk/gateway-server:0.0.1-SNAPSHOT
+    container_name: gateway-server
+    ports:
+      - "8080:8080"
+    depends_on:
+      - eureka-naming-server
+    restart: always
+    environment:
+      NAMING_SERVER: http://eureka-naming-server:8761/eureka/
+    networks:
+      - notifire-network
+
+networks:
+  notifire-network:
