@@ -13,7 +13,7 @@ import javax.validation.Valid;
 @RequestMapping
 public class ApiController {
 
-    private UserService userService;
+    private final UserService userService;
 
     public ApiController(UserService userService) {
         this.userService = userService;
