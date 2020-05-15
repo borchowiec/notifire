@@ -7,6 +7,9 @@ import com.borchowiec.userservice.repository.UserRepository;
 import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;
 
+/**
+ * Checks if email is unique by searching in database.
+ */
 public class UniqueEmailValidation implements ConstraintValidator<UniqueEmail, String> {
     private final UserRepository userRepository;
 

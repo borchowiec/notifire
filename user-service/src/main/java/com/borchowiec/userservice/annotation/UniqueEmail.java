@@ -7,6 +7,9 @@ import javax.validation.Constraint;
 import javax.validation.Payload;
 import java.lang.annotation.*;
 
+/**
+ * Checks if field email is unique.
+ */
 @Documented
 @Constraint(validatedBy = UniqueEmailValidation.class)
 @Target( { ElementType.METHOD, ElementType.FIELD })

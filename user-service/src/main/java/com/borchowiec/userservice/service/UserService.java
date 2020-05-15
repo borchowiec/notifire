@@ -19,6 +19,10 @@ public class UserService {
         this.passwordEncoder = passwordEncoder;
     }
 
+    /**
+     * Adds new user to database. Before adding, sets up user's {@link UserRole Role} and encode password.
+     * @param user User that will be added.
+     */
     public void addUser(User user) {
         user.setRoles(Collections.singletonList(UserRole.USER));
         String encodedPassword = passwordEncoder.encode(user.getPassword());

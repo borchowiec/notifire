@@ -19,6 +19,10 @@ public class ApiController {
         this.userService = userService;
     }
 
+    /**
+     * Adds new user to database.
+     * @param user User that will be added.
+     */
     @PostMapping("/add")
     public void addUser(@RequestBody @Valid User user) {
         userService.addUser(user);

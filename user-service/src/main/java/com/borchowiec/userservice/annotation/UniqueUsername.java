@@ -6,6 +6,9 @@ import javax.validation.Constraint;
 import javax.validation.Payload;
 import java.lang.annotation.*;
 
+/**
+ * Checks if field username is unique.
+ */
 @Documented
 @Constraint(validatedBy = UniqueUsernameValidation.class)
 @Target( { ElementType.METHOD, ElementType.FIELD })

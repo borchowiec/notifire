@@ -6,6 +6,9 @@ import com.borchowiec.userservice.repository.UserRepository;
 import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;
 
+/**
+ * Checks if username is unique by searching in database.
+ */
 public class UniqueUsernameValidation implements ConstraintValidator<UniqueUsername, String> {
     private final UserRepository userRepository;
 
