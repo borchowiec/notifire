@@ -2,6 +2,7 @@ package com.borchowiec.userservice.model;
 
 import com.borchowiec.userservice.annotation.UniqueEmail;
 import com.borchowiec.userservice.annotation.UniqueUsername;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;

@@ -1,5 +1,6 @@
 package com.borchowiec.userservice.security;
 
+import com.borchowiec.userservice.exception.UserNotFoundException;
 import com.borchowiec.userservice.model.User;
 import com.borchowiec.userservice.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,7 +36,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             String userId = tokenProvider.getUserIdFromJWT(jwt);
             User user = userRepository
                     .findById(userId)
-                    .orElseThrow(() -> new UsernameNotFoundException("Not found user of id " + userId));
+                    .orElseThrow(() -> new UserNotFoundException("Not found user of id " + userId));
 
             UserDetails userDetails = new UserPrincipal(user);
 
