@@ -3,29 +3,35 @@ package com.borchowiec.userservice.controller;
 import com.borchowiec.userservice.model.User;
 import com.borchowiec.userservice.model.UserRole;
 import com.borchowiec.userservice.payload.UserInfoResponse;
+import com.borchowiec.userservice.payload.UserUpdateRequest;
 import com.borchowiec.userservice.repository.UserRepository;
 import com.borchowiec.userservice.security.CustomUserDetailsService;
+import com.borchowiec.userservice.security.JwtAuthenticationFilter;
 import com.borchowiec.userservice.security.JwtTokenProvider;
 import com.borchowiec.userservice.service.UserService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
+import sun.security.acl.PrincipalImpl;
 
 import java.util.Collections;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.setup.MockMvcBuilders.standaloneSetup;
@@ -33,6 +39,12 @@ import static org.springframework.test.web.servlet.setup.MockMvcBuilders.standal
 @WebMvcTest(ApiController.class)
 @TestPropertySource(locations="classpath:test.properties")
 class ApiControllerTest {
+
+    @Value("${app.jwtSecret}")
+    private String jwtSecret;
+
+    @Value("${app.jwtExpirationInMs}")
+    private int jwtExpirationInMs;
 
     @Autowired
     private MockMvc mockMvc;
@@ -52,9 +64,6 @@ class ApiControllerTest {
     @MockBean
     private JwtTokenProvider tokenProvider;
 
-    @MockBean
-    private AuthenticationManager authenticationManager;
-    
     @Test
     void addUser_usernameAlreadyTaken_shouldReturn400() throws Exception {
         User user = new User(null, "username", "passs", "email@mail.com", null);
@@ -117,5 +126,47 @@ class ApiControllerTest {
                 .readValue(result.getResponse().getContentAsByteArray(), UserInfoResponse.class);
         UserInfoResponse expected = new UserInfoResponse(user);
         assertEquals(expected, given);
+    }
+
+    @Test
+    void updateUser_noAuthentication_shouldReturn403() throws Exception {
+        UserUpdateRequest request = new UserUpdateRequest("newUsername", "new.email@mail.com");
+
+        mockMvc.perform(put("/update")
+                .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isForbidden())
+                .andReturn();
+    }
+
+    @Test
+    void updateUser_authenticated_Return200AndUpdatedUserInfo() throws Exception {
+        UserUpdateRequest request = new UserUpdateRequest("newUsername", "new.email@mail.com");
+        User user = new User("lk1j23kl1j3", "oldUsername", "password", "old.email@mail.com",
+                Collections.singletonList(UserRole.USER));
+
+        authenticateUser(user);
+        when(userRepository.findByUsername(anyString())).thenReturn(Optional.of(user));
+        when(userRepository.save(any(User.class))).thenReturn(new User(user.getId(), request.getUsername(),
+                user.getPassword(), request.getEmail(), user.getRoles()));
+
+        String jwt = "Bearer token";
+        MvcResult result = mockMvc.perform(put("/update")
+                .header("Authorization", jwt)
+                .principal(new PrincipalImpl("oldUsername"))
+                .contentType("application/json")
+                .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        UserInfoResponse given = objectMapper
+                .readValue(result.getResponse().getContentAsByteArray(), UserInfoResponse.class);
+        UserInfoResponse expected = new UserInfoResponse(user.getId(), request.getUsername(), request.getEmail());
+        assertEquals(expected, given);
+    }
+
+    void authenticateUser(User user) {
+        when(tokenProvider.validateToken(anyString())).thenReturn(true);
+        when(tokenProvider.getUserIdFromJWT(anyString())).thenReturn(user.getId());
+        when(userRepository.findById(anyString())).thenReturn(Optional.of(user));
     }
 }

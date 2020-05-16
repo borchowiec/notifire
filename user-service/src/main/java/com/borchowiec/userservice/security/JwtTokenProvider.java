@@ -1,6 +1,8 @@
 package com.borchowiec.userservice.security;
 
 import io.jsonwebtoken.*;
+import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
@@ -8,6 +10,8 @@ import org.springframework.stereotype.Component;
 import java.util.Date;
 
 @Component
+@NoArgsConstructor
+@AllArgsConstructor
 public class JwtTokenProvider {
     @Value("${app.jwtSecret}")
     private String jwtSecret;
@@ -19,12 +23,16 @@ public class JwtTokenProvider {
 
         UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
 
+        return createToken(userPrincipal.getId());
+    }
+
+    public String createToken(String id) {
         Date now = new Date();
         Date expiryDate = new Date(now.getTime() + jwtExpirationInMs);
 
         return Jwts.builder()
-                .setSubject(userPrincipal.getId())
-                .setIssuedAt(new Date())
+                .setSubject(id)
+                .setIssuedAt(now)
                 .setExpiration(expiryDate)
                 .signWith(SignatureAlgorithm.HS512, jwtSecret)
                 .compact();

@@ -5,6 +5,7 @@ import com.borchowiec.userservice.model.User;
 import com.borchowiec.userservice.payload.AuthenticateRequest;
 import com.borchowiec.userservice.payload.JwtAuthenticationResponse;
 import com.borchowiec.userservice.payload.UserInfoResponse;
+import com.borchowiec.userservice.payload.UserUpdateRequest;
 import com.borchowiec.userservice.repository.UserRepository;
 import com.borchowiec.userservice.security.JwtTokenProvider;
 import com.borchowiec.userservice.service.UserService;
@@ -16,6 +17,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
+import java.security.Principal;
 
 @RestController
 @RequestMapping
@@ -63,5 +65,17 @@ public class ApiController {
                 .findById(userId)
                 .orElseThrow(() -> new UserNotFoundException("Not found user of id " + userId));
         return new UserInfoResponse(user);
+    }
+
+    @PutMapping("/update")
+    public UserInfoResponse updateUser(@RequestBody @Valid UserUpdateRequest userUpdateRequest, Principal principal) {
+        String username = principal.getName();
+        User user = userRepository
+                .findByUsername(username)
+                .orElseThrow(() -> new UserNotFoundException("Not found user of username" + username));
+        user.setUsername(userUpdateRequest.getUsername());
+        user.setEmail(userUpdateRequest.getEmail());
+        User insertedUser = userRepository.save(user);
+        return new UserInfoResponse(insertedUser);
     }
 }
